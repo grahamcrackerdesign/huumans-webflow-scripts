@@ -1,4 +1,3 @@
-<script>
   (function () {
     function init() {
       document.querySelectorAll('[data-feature-sync]').forEach(function (scope) {
@@ -53,4 +52,3 @@
       init();
     }
   })();
-</script>
