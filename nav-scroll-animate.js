@@ -27,6 +27,7 @@
 
     // Menu button border
     menuBtn.style.borderColor = dark ? '#1a1a1a' : '';
+    menuBtn.style.backgroundColor = dark ? 'var(--_color---neutral--white)' : '';
 
     // Nav buttons (desktop)
     var white = onDark;
