@@ -11,9 +11,9 @@
     var menuBtn = document.querySelector('.nav-menu_btn');
     var bars = document.querySelectorAll('.nav-menu_btn-bar');
 
-    if (!hero || !logo || !loginBtn || !signupBtn || !menuBtn) return;
+    if (!logo || !menuBtn) return;
 
-    var pastHero = false;
+    var pastHero = !hero;  // if no hero, default to "past hero" so nav starts dark
     var nearFooter = false;
     var menuOpen = false;
 
@@ -27,9 +27,13 @@
       menuBtn.style.borderColor = dark ? '#1a1a1a' : '';
       menuBtn.style.backgroundColor = dark ? 'var(--_color---neutral--white)' : '';
       var white = onDark;
-      loginBtn.classList.toggle('w-variant-052759b4-b398-e98d-c28c-099b380d4426', !white);
-      loginBtn.classList.toggle('w-variant-e77e9b6f-8f2c-79bb-2908-5e14ffb7b110', white);
-      signupBtn.classList.toggle('w-variant-0d74589e-6e29-a7bb-5197-70e868053214', white);
+      if (loginBtn) {
+        loginBtn.classList.toggle('w-variant-052759b4-b398-e98d-c28c-099b380d4426', !white);
+        loginBtn.classList.toggle('w-variant-e77e9b6f-8f2c-79bb-2908-5e14ffb7b110', white);
+      }
+      if (signupBtn) {
+        signupBtn.classList.toggle('w-variant-0d74589e-6e29-a7bb-5197-70e868053214', white);
+      }
     }
 
     new MutationObserver(function() {
@@ -37,10 +41,12 @@
       update();
     }).observe(menuBtn, { attributes: true, attributeFilter: ['class'] });
 
-    new IntersectionObserver(function(entries) {
-      pastHero = !entries[0].isIntersecting;
-      update();
-    }, { threshold: 0 }).observe(hero);
+    if (hero) {
+      new IntersectionObserver(function(entries) {
+        pastHero = !entries[0].isIntersecting;
+        update();
+      }, { threshold: 0 }).observe(hero);
+    }
 
     if (footer) {
       new IntersectionObserver(function(entries) {
@@ -48,6 +54,8 @@
         update();
       }, { threshold: 0, rootMargin: '0px 0px -90% 0px' }).observe(footer);
     }
+
+    update(); // set initial state immediately
   }
 
   if (document.readyState === 'complete') init();
