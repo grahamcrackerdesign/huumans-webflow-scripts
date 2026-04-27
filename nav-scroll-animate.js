@@ -1,4 +1,7 @@
 (function () {
+  var pageWrapper = document.querySelector('.page-wrapper');
+  if (pageWrapper?.classList.contains('cc-page-dark-nav')) return;
+
   var hero = document.getElementById('hero');
   var footer = document.getElementById('footer');
   var logo = document.querySelector('.nav-logo_link img');
