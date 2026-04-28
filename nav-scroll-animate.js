@@ -22,7 +22,7 @@
       var dark = menuOpen || !onDark;
 
       var navEl = document.querySelector('.nav');
-      if (navEl) navEl.style.backgroundColor = dark ? '#fcfcfb' : '';
+      if (navEl) navEl.style.backgroundColor = dark ? '#ffffff' : '';
       
       logo.style.filter = dark ? 'brightness(0)' : '';
       bars.forEach(function(b) {
