@@ -20,6 +20,10 @@
     function update() {
       var onDark = !pastHero || nearFooter;
       var dark = menuOpen || !onDark;
+
+      var navEl = document.querySelector('.nav');
+      if (navEl) navEl.style.backgroundColor = dark ? 'var(--_color---neutral--white)' : '';
+      
       logo.style.filter = dark ? 'brightness(0)' : '';
       bars.forEach(function(b) {
         b.style.backgroundColor = dark ? '#1a1a1a' : '';
