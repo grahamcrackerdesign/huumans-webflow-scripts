@@ -2,7 +2,11 @@
   setTimeout(function () {
     var outer = document.getElementById('textSwap');
     if (!outer) return;
-    var words = ['Owners', 'Plumbers', 'Restaurants', 'Contractors', 'Retailers', 'Freelancers'];
+    var defaultWords = ['Owners', 'Plumbers', 'Restaurants', 'Contractors', 'Retailers', 'Freelancers'];
+    var wordsAttr = outer.dataset.words;
+    var words = wordsAttr
+    ? wordsAttr.split(',').map(function (w) { return w.trim(); }).filter(Boolean)
+    : defaultWords;
     var current = 0;
     var inner = document.createElement('span');
     inner.textContent = outer.textContent;
