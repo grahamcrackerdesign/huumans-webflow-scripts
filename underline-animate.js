@@ -1,6 +1,6 @@
 (function () {
   setTimeout(function () {
-    var targets = document.querySelectorAll('.underlined');
+    var targets = document.querySelectorAll('.underlined, .highlighted');
     if (!targets.length) return;
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
@@ -14,7 +14,7 @@
       rootMargin: '0px 0px -10% 0px'
     });
     targets.forEach(function (el) {
-      if (el.id === 'textSwap') return; // textSwap has its own script
+      if (el.id === 'textSwap') return;
       observer.observe(el);
     });
   }, 100);
