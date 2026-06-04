@@ -20,7 +20,6 @@
   }
 
   function activateSlideVideo(video) {
-    loadVideo(video);
     video.muted = muted;
     video.play().catch(function () {});
     document.querySelectorAll('.owner-video').forEach(function (v) {
@@ -28,24 +27,7 @@
     });
   }
 
-  function preloadAdjacent(swiperEl) {
-    ['.swiper-slide-next', '.swiper-slide-prev'].forEach(function (cls) {
-      var slide = swiperEl.querySelector(cls);
-      if (slide) {
-        var video = slide.querySelector('.owner-video');
-        if (video) loadVideo(video);
-      }
-    });
-  }
-
-  function init() {
-    // Mast stores the instance as swiperInstance, not swiper
-    var swiperEl = document.querySelector('[data-slider="slider"]');
-    if (!swiperEl) return;
-
-    var swiper = swiperEl.swiperInstance || (window.AttributesSwiper && window.AttributesSwiper.getInstance(0));
-    if (!swiper) return;
-
+  function setup(swiperEl, swiper) {
     var btn = document.getElementById('muteButton');
     if (btn) {
       setMute(true);
@@ -56,29 +38,37 @@
       var activeSlide = swiperEl.querySelector('.swiper-slide-active');
       if (!activeSlide) return;
       var video = activeSlide.querySelector('.owner-video');
-      if (video) {
-        activateSlideVideo(video);
-        preloadAdjacent(swiperEl);
-      }
+      if (video) activateSlideVideo(video);
     });
 
-    // Lazy-load first video when section scrolls into view
-    var firstVideo = swiperEl.querySelector('.swiper-slide-active .owner-video');
-    if (firstVideo) {
-      new IntersectionObserver(function (entries, obs) {
-        if (entries[0].isIntersecting) {
-          activateSlideVideo(firstVideo);
-          preloadAdjacent(swiperEl);
-          obs.disconnect();
-        }
-      }, { rootMargin: '200px' }).observe(firstVideo);
+    // When the section enters the viewport, load every video (real + clones) at once,
+    // then play whichever slide is currently active.
+    new IntersectionObserver(function (entries, obs) {
+      if (!entries[0].isIntersecting) return;
+      obs.disconnect();
+      swiperEl.querySelectorAll('.owner-video').forEach(loadVideo);
+      var activeSlide = swiperEl.querySelector('.swiper-slide-active');
+      if (activeSlide) {
+        var video = activeSlide.querySelector('.owner-video');
+        if (video) activateSlideVideo(video);
+      }
+    }, { rootMargin: '200px' }).observe(swiperEl);
+  }
+
+  // Poll until Mast has attached swiperInstance (runs async after DOMContentLoaded)
+  function tryInit(attemptsLeft) {
+    var swiperEl = document.querySelector('[data-slider="slider"]');
+    var swiper = swiperEl && (swiperEl.swiperInstance || (window.AttributesSwiper && window.AttributesSwiper.getInstance(0)));
+    if (swiper) {
+      setup(swiperEl, swiper);
+    } else if (attemptsLeft > 0) {
+      setTimeout(function () { tryInit(attemptsLeft - 1); }, 100);
     }
   }
 
-  // Mast initializes Swiper on DOMContentLoaded; registering after ensures swiperInstance is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () { tryInit(20); });
   } else {
-    init();
+    tryInit(20);
   }
 })();
