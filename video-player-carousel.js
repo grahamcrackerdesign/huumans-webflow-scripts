@@ -13,17 +13,18 @@
   }
 
   function updateButton(video) {
-    var slide = video.closest('.w-slide');
-    if (!slide) return;
-    var playIcon = slide.querySelector('.playIcon');
-    var pauseIcon = slide.querySelector('.pauseIcon');
+    var wrapper = video.closest('.video-wrapper');
+    if (!wrapper) return;
+    var playIcon = wrapper.querySelector('#playIcon');
+    var pauseIcon = wrapper.querySelector('#pauseIcon');
     if (playIcon) playIcon.style.display = video.paused ? 'flex' : 'none';
     if (pauseIcon) pauseIcon.style.display = video.paused ? 'none' : 'flex';
   }
 
   function activateSlideVideo(video) {
     loadVideo(video);
-    video.play();
+    video.muted = true;
+    video.play().catch(function () {});
     updateButton(video);
     videos.forEach(function (v) {
       if (v !== video) {
@@ -33,15 +34,22 @@
     });
   }
 
-  // Wire each play/pause button to its slide's video
+  // Initialize all buttons to play icon
   videos.forEach(function (video) {
-    var slide = video.closest('.w-slide');
-    if (!slide) return;
-    var btn = slide.querySelector('.playPauseButton');
+    var wrapper = video.closest('.video-wrapper');
+    if (!wrapper) return;
+    var playIcon = wrapper.querySelector('#playIcon');
+    var pauseIcon = wrapper.querySelector('#pauseIcon');
+    if (playIcon) playIcon.style.display = 'flex';
+    if (pauseIcon) pauseIcon.style.display = 'none';
+
+    // Wire play/pause button
+    var btn = wrapper.querySelector('#playButton');
     if (!btn) return;
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
       if (video.paused) {
-        video.play();
+        video.play().catch(function () {});
       } else {
         video.pause();
       }
@@ -49,20 +57,20 @@
     });
   });
 
-  // On slide change, auto-play the incoming slide and pause others
-  var sliderMask = document.querySelector('.w-slider-mask');
-  if (sliderMask) {
+  // Watch for slide changes — Swiper uses swiper-slide-active
+  var swiperWrapper = document.querySelector('.swiper-wrapper');
+  if (swiperWrapper) {
     new MutationObserver(function () {
-      var activeSlide = sliderMask.querySelector('.w-slide.w-active');
+      var activeSlide = swiperWrapper.querySelector('.swiper-slide-active');
       if (activeSlide) {
         var video = activeSlide.querySelector('.owner-video');
         if (video) activateSlideVideo(video);
       }
-    }).observe(sliderMask, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    }).observe(swiperWrapper, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
-  // Lazy-load and play the first video when the section scrolls into view
-  var firstVideo = document.querySelector('.w-slide.w-active .owner-video') || videos[0];
+  // Lazy-load and play the first active video when it scrolls into view
+  var firstVideo = document.querySelector('.swiper-slide-active .owner-video') || videos[0];
   if (firstVideo) {
     new IntersectionObserver(function (entries, obs) {
       if (entries[0].isIntersecting) {
