@@ -41,30 +41,41 @@
   window.Webflow = window.Webflow || [];
   window.Webflow.push(function () {
     var swiperEl = document.querySelector('.swiper');
-    var swiper = swiperEl && swiperEl.swiper;
-    var btn = document.getElementById('muteButton');
-
     if (!swiperEl) return;
 
+    var btn = document.getElementById('muteButton');
     if (btn) {
       setMute(true);
       btn.addEventListener('click', function () { setMute(!muted); });
     }
 
+    // Track the last active slide index to avoid firing multiple times per transition
+    var lastActiveIndex = -1;
+
+    function onSlideChange() {
+      var activeSlide = swiperEl.querySelector('.swiper-slide-active');
+      if (!activeSlide) return;
+      var idx = activeSlide.getAttribute('data-swiper-slide-index');
+      if (idx === lastActiveIndex) return;
+      lastActiveIndex = idx;
+      var video = activeSlide.querySelector('.owner-video');
+      if (video) {
+        activateSlideVideo(video);
+        preloadAdjacent(swiperEl);
+      }
+    }
+
+    // Use Swiper's native API if available, otherwise MutationObserver
+    var swiper = swiperEl.swiper;
     if (swiper) {
-      swiper.on('slideChange', function () {
-        var activeSlide = swiperEl.querySelector('.swiper-slide-active');
-        if (activeSlide) {
-          var video = activeSlide.querySelector('.owner-video');
-          if (video) {
-            activateSlideVideo(video);
-            preloadAdjacent(swiperEl);
-          }
-        }
+      swiper.on('slideChange', onSlideChange);
+    } else {
+      new MutationObserver(onSlideChange).observe(swiperEl, {
+        subtree: true, attributes: true, attributeFilter: ['class']
       });
     }
 
-    // Lazy-load first video and adjacent slides when section scrolls into view
+    // Lazy-load first video when section scrolls into view
     var firstVideo = swiperEl.querySelector('.swiper-slide-active .owner-video');
     if (firstVideo) {
       new IntersectionObserver(function (entries, obs) {
