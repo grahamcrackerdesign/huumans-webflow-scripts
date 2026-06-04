@@ -1,18 +1,7 @@
 (function () {
-  var btn = document.getElementById('muteButton');
-  var muteIcon = document.getElementById('muteIcon');
-  var unmuteIcon = document.getElementById('unmuteIcon');
   var videos = Array.from(document.querySelectorAll('.owner-video'));
-  var muted = true;
 
-  if (!videos.length || !btn) return;
-
-  function setMute(state) {
-    muted = state;
-    videos.forEach(function (v) { v.muted = state; });
-    muteIcon.style.display = state ? 'flex' : 'none';
-    unmuteIcon.style.display = state ? 'none' : 'flex';
-  }
+  if (!videos.length) return;
 
   function loadVideo(video) {
     var source = video.querySelector('source');
@@ -23,23 +12,44 @@
     }
   }
 
+  function updateButton(video) {
+    var slide = video.closest('.w-slide');
+    if (!slide) return;
+    var playIcon = slide.querySelector('.playIcon');
+    var pauseIcon = slide.querySelector('.pauseIcon');
+    if (playIcon) playIcon.style.display = video.paused ? 'flex' : 'none';
+    if (pauseIcon) pauseIcon.style.display = video.paused ? 'none' : 'flex';
+  }
+
   function activateSlideVideo(video) {
     loadVideo(video);
-    video.muted = muted;
     video.play();
+    updateButton(video);
     videos.forEach(function (v) {
-      if (v !== video) v.pause();
+      if (v !== video) {
+        v.pause();
+        updateButton(v);
+      }
     });
   }
 
-  setMute(true);
-
-  btn.addEventListener('click', function () {
-    setMute(!muted);
+  // Wire each play/pause button to its slide's video
+  videos.forEach(function (video) {
+    var slide = video.closest('.w-slide');
+    if (!slide) return;
+    var btn = slide.querySelector('.playPauseButton');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+      updateButton(video);
+    });
   });
 
-  // On slide change, load and play the incoming slide's video, pause others.
-  // Webflow toggles the w-active class on slides during transitions.
+  // On slide change, auto-play the incoming slide and pause others
   var sliderMask = document.querySelector('.w-slider-mask');
   if (sliderMask) {
     new MutationObserver(function () {
@@ -51,7 +61,7 @@
     }).observe(sliderMask, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
-  // Lazy-load the first video when the section scrolls into view.
+  // Lazy-load and play the first video when the section scrolls into view
   var firstVideo = document.querySelector('.w-slide.w-active .owner-video') || videos[0];
   if (firstVideo) {
     new IntersectionObserver(function (entries, obs) {
