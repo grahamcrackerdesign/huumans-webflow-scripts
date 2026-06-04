@@ -41,8 +41,8 @@
     }
 
     swiper.on('slideChange', function () {
-      console.log('[video] slideChange fired');
-      var activeSlide = swiperEl.querySelector('.swiper-slide-active');
+      console.log('[video] slideChange fired, activeIndex:', swiper.activeIndex);
+      var activeSlide = swiper.slides[swiper.activeIndex];
       console.log('[video] activeSlide:', activeSlide);
       if (!activeSlide) return;
       var video = activeSlide.querySelector('.owner-video');
