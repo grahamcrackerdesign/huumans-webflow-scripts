@@ -1,7 +1,18 @@
 (function () {
+  var btn = document.getElementById('muteButton');
+  var muteIcon = document.getElementById('muteIcon');
+  var unmuteIcon = document.getElementById('unmuteIcon');
   var videos = Array.from(document.querySelectorAll('.owner-video'));
+  var muted = true;
 
-  if (!videos.length) return;
+  if (!videos.length || !btn) return;
+
+  function setMute(state) {
+    muted = state;
+    videos.forEach(function (v) { v.muted = state; });
+    muteIcon.style.display = state ? 'flex' : 'none';
+    unmuteIcon.style.display = state ? 'none' : 'flex';
+  }
 
   function loadVideo(video) {
     var source = video.querySelector('source');
@@ -12,52 +23,22 @@
     }
   }
 
-  function updateButton(video) {
-    var wrapper = video.closest('.video-wrapper');
-    if (!wrapper) return;
-    var playIcon = wrapper.querySelector('#playIcon');
-    var pauseIcon = wrapper.querySelector('#pauseIcon');
-    if (playIcon) playIcon.style.display = video.paused ? 'flex' : 'none';
-    if (pauseIcon) pauseIcon.style.display = video.paused ? 'none' : 'flex';
-  }
-
   function activateSlideVideo(video) {
     loadVideo(video);
-    video.muted = true;
+    video.muted = muted;
     video.play().catch(function () {});
-    updateButton(video);
     videos.forEach(function (v) {
-      if (v !== video) {
-        v.pause();
-        updateButton(v);
-      }
+      if (v !== video) v.pause();
     });
   }
 
-  // Initialize all buttons to play icon
-  videos.forEach(function (video) {
-    var wrapper = video.closest('.video-wrapper');
-    if (!wrapper) return;
-    var playIcon = wrapper.querySelector('#playIcon');
-    var pauseIcon = wrapper.querySelector('#pauseIcon');
-    if (playIcon) playIcon.style.display = 'flex';
-    if (pauseIcon) pauseIcon.style.display = 'none';
+  setMute(true);
 
-    // Wire play/pause button
-    var btn = wrapper.querySelector('#playButton');
-    if (!btn) return;
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (video.paused) {
-        video.play().catch(function () {});
-      } else {
-        video.pause();
-      }
-      updateButton(video);
-    });
+  btn.addEventListener('click', function () {
+    setMute(!muted);
   });
 
-  // Watch for slide changes — Swiper uses swiper-slide-active
+  // Watch for Swiper slide changes — fires when swiper-slide-active moves to a new slide
   var swiperWrapper = document.querySelector('.swiper-wrapper');
   if (swiperWrapper) {
     new MutationObserver(function () {
@@ -69,7 +50,7 @@
     }).observe(swiperWrapper, { subtree: true, attributes: true, attributeFilter: ['class'] });
   }
 
-  // Lazy-load and play the first active video when it scrolls into view
+  // Lazy-load and play the first active video when the section scrolls into view
   var firstVideo = document.querySelector('.swiper-slide-active .owner-video') || videos[0];
   if (firstVideo) {
     new IntersectionObserver(function (entries, obs) {
