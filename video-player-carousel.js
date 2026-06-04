@@ -17,6 +17,7 @@
     if (source && source.dataset.src && !source.dataset.loaded) {
       source.src = source.dataset.src;
       source.dataset.loaded = '1';
+      video.preload = 'auto';
       video.load();
     }
   }
@@ -28,14 +29,7 @@
     });
     video.muted = muted;
     loadVideo(video);
-    if (video.readyState >= 3) {
-      video.play().catch(function (e) { console.log('[video] play() failed', e); });
-    } else {
-      video.addEventListener('canplay', function handler() {
-        video.removeEventListener('canplay', handler);
-        video.play().catch(function (e) { console.log('[video] play() failed', e); });
-      });
-    }
+    video.play().catch(function (e) { console.log('[video] play() failed', e); });
   }
 
   function setup(swiperEl, swiper) {
