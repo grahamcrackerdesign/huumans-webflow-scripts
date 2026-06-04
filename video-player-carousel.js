@@ -1,4 +1,6 @@
 (function () {
+  if (window._ownerVideoInit) return;
+  window._ownerVideoInit = true;
   var muted = true;
 
   function setMute(state) {
