@@ -23,12 +23,19 @@
 
   function activateSlideVideo(video) {
     console.log('[video] activateSlideVideo called', video);
-    loadVideo(video);
-    video.muted = muted;
-    video.play().catch(function (e) { console.log('[video] play() failed', e); });
     document.querySelectorAll('.owner-video').forEach(function (v) {
       if (v !== video) v.pause();
     });
+    video.muted = muted;
+    loadVideo(video);
+    if (video.readyState >= 3) {
+      video.play().catch(function (e) { console.log('[video] play() failed', e); });
+    } else {
+      video.addEventListener('canplay', function handler() {
+        video.removeEventListener('canplay', handler);
+        video.play().catch(function (e) { console.log('[video] play() failed', e); });
+      });
+    }
   }
 
   function setup(swiperEl, swiper) {
