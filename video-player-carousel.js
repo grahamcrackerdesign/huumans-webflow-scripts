@@ -38,10 +38,13 @@
     });
   }
 
-  window.Webflow = window.Webflow || [];
-  window.Webflow.push(function () {
-    var swiperEl = document.querySelector('.swiper');
+  function init() {
+    // Mast stores the instance as swiperInstance, not swiper
+    var swiperEl = document.querySelector('[data-slider="slider"]');
     if (!swiperEl) return;
+
+    var swiper = swiperEl.swiperInstance || (window.AttributesSwiper && window.AttributesSwiper.getInstance(0));
+    if (!swiper) return;
 
     var btn = document.getElementById('muteButton');
     if (btn) {
@@ -49,31 +52,15 @@
       btn.addEventListener('click', function () { setMute(!muted); });
     }
 
-    // Track the last active slide index to avoid firing multiple times per transition
-    var lastActiveIndex = -1;
-
-    function onSlideChange() {
+    swiper.on('slideChange', function () {
       var activeSlide = swiperEl.querySelector('.swiper-slide-active');
       if (!activeSlide) return;
-      var idx = activeSlide.getAttribute('data-swiper-slide-index');
-      if (idx === lastActiveIndex) return;
-      lastActiveIndex = idx;
       var video = activeSlide.querySelector('.owner-video');
       if (video) {
         activateSlideVideo(video);
         preloadAdjacent(swiperEl);
       }
-    }
-
-    // Use Swiper's native API if available, otherwise MutationObserver
-    var swiper = swiperEl.swiper;
-    if (swiper) {
-      swiper.on('slideChange', onSlideChange);
-    } else {
-      new MutationObserver(onSlideChange).observe(swiperEl, {
-        subtree: true, attributes: true, attributeFilter: ['class']
-      });
-    }
+    });
 
     // Lazy-load first video when section scrolls into view
     var firstVideo = swiperEl.querySelector('.swiper-slide-active .owner-video');
@@ -86,5 +73,12 @@
         }
       }, { rootMargin: '200px' }).observe(firstVideo);
     }
-  });
+  }
+
+  // Mast initializes Swiper on DOMContentLoaded; registering after ensures swiperInstance is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
