@@ -21,6 +21,7 @@
 
   function activateSlideVideo(video) {
     console.log('[video] activateSlideVideo called', video);
+    loadVideo(video);
     video.muted = muted;
     video.play().catch(function (e) { console.log('[video] play() failed', e); });
     document.querySelectorAll('.owner-video').forEach(function (v) {
