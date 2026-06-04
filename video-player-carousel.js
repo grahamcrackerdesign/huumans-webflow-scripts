@@ -1,17 +1,13 @@
 (function () {
-  var btn = document.getElementById('muteButton');
-  var muteIcon = document.getElementById('muteIcon');
-  var unmuteIcon = document.getElementById('unmuteIcon');
-  var videos = Array.from(document.querySelectorAll('.owner-video'));
   var muted = true;
-
-  if (!videos.length || !btn) return;
 
   function setMute(state) {
     muted = state;
-    videos.forEach(function (v) { v.muted = state; });
-    muteIcon.style.display = state ? 'flex' : 'none';
-    unmuteIcon.style.display = state ? 'none' : 'flex';
+    document.querySelectorAll('.owner-video').forEach(function (v) { v.muted = state; });
+    var muteIcon = document.getElementById('muteIcon');
+    var unmuteIcon = document.getElementById('unmuteIcon');
+    if (muteIcon) muteIcon.style.display = state ? 'flex' : 'none';
+    if (unmuteIcon) unmuteIcon.style.display = state ? 'none' : 'flex';
   }
 
   function loadVideo(video) {
@@ -27,37 +23,57 @@
     loadVideo(video);
     video.muted = muted;
     video.play().catch(function () {});
-    videos.forEach(function (v) {
+    document.querySelectorAll('.owner-video').forEach(function (v) {
       if (v !== video) v.pause();
     });
   }
 
-  setMute(true);
+  function preloadAdjacent(swiperEl) {
+    ['.swiper-slide-next', '.swiper-slide-prev'].forEach(function (cls) {
+      var slide = swiperEl.querySelector(cls);
+      if (slide) {
+        var video = slide.querySelector('.owner-video');
+        if (video) loadVideo(video);
+      }
+    });
+  }
 
-  btn.addEventListener('click', function () {
-    setMute(!muted);
+  window.Webflow = window.Webflow || [];
+  window.Webflow.push(function () {
+    var swiperEl = document.querySelector('.swiper');
+    var swiper = swiperEl && swiperEl.swiper;
+    var btn = document.getElementById('muteButton');
+
+    if (!swiperEl) return;
+
+    if (btn) {
+      setMute(true);
+      btn.addEventListener('click', function () { setMute(!muted); });
+    }
+
+    if (swiper) {
+      swiper.on('slideChange', function () {
+        var activeSlide = swiperEl.querySelector('.swiper-slide-active');
+        if (activeSlide) {
+          var video = activeSlide.querySelector('.owner-video');
+          if (video) {
+            activateSlideVideo(video);
+            preloadAdjacent(swiperEl);
+          }
+        }
+      });
+    }
+
+    // Lazy-load first video and adjacent slides when section scrolls into view
+    var firstVideo = swiperEl.querySelector('.swiper-slide-active .owner-video');
+    if (firstVideo) {
+      new IntersectionObserver(function (entries, obs) {
+        if (entries[0].isIntersecting) {
+          activateSlideVideo(firstVideo);
+          preloadAdjacent(swiperEl);
+          obs.disconnect();
+        }
+      }, { rootMargin: '200px' }).observe(firstVideo);
+    }
   });
-
-  // Watch for Swiper slide changes — fires when swiper-slide-active moves to a new slide
-  var swiperWrapper = document.querySelector('.swiper-wrapper');
-  if (swiperWrapper) {
-    new MutationObserver(function () {
-      var activeSlide = swiperWrapper.querySelector('.swiper-slide-active');
-      if (activeSlide) {
-        var video = activeSlide.querySelector('.owner-video');
-        if (video) activateSlideVideo(video);
-      }
-    }).observe(swiperWrapper, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  }
-
-  // Lazy-load and play the first active video when the section scrolls into view
-  var firstVideo = document.querySelector('.swiper-slide-active .owner-video') || videos[0];
-  if (firstVideo) {
-    new IntersectionObserver(function (entries, obs) {
-      if (entries[0].isIntersecting) {
-        activateSlideVideo(firstVideo);
-        obs.disconnect();
-      }
-    }, { rootMargin: '200px' }).observe(firstVideo);
-  }
 })();
